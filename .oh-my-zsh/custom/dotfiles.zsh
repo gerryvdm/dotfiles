@@ -9,3 +9,7 @@ composer () {
 symfony() {
   docker run --rm -it -v "$PWD":/app -w /app phpdev symfony "$@"
 }
+
+yarn() {
+  docker run --rm -it -v "$PWD":/app -w /app node:current-alpine yarn "$@"
+}
