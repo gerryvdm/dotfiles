@@ -2,15 +2,31 @@ ZSH_CUSTOM ?= $(HOME)/.oh-my-zsh/custom
 GIT_USER_EMAIL := $(shell git config user.email)
 GIT_USER_NAME  := $(shell git config user.name)
 
-.PHONY: install containers
+.PHONY: help install brew containers node intelephense
+.DEFAULT_GOAL := help
 
-install: containers
+help:
+	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*## "} {printf "  %-14s %s\n", $$1, $$2}'
+
+install: brew node containers ## Install everything and link config
 	mkdir -p "$(ZSH_CUSTOM)"
-	ln -sfn "$(PWD)/.oh-my-zsh/custom/dotfiles.zsh" "$(ZSH_CUSTOM)/dotfiles.zsh"
+	ln -sfn "$(CURDIR)/.oh-my-zsh/custom/dotfiles.zsh" "$(ZSH_CUSTOM)/dotfiles.zsh"
+	mkdir -p "$(HOME)/.claude"
+	ln -sfn "$(CURDIR)/agents" "$(HOME)/.claude/agents"
 
-containers:
+brew: ## Install Homebrew
+	bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+node: brew ## Install Node.js
+	brew install node
+
+intelephense: ## Install the intelephense language server
+	npm install -g intelephense
+
+containers: ## Build the phpdev Docker image
 	docker build \
 	  --no-cache --pull \
       --build-arg GIT_USER_EMAIL="$(GIT_USER_EMAIL)" \
       --build-arg GIT_USER_NAME="$(GIT_USER_NAME)" \
-	  -t phpdev "$(PWD)/docker/phpdev"
+	  -t phpdev "$(CURDIR)/docker/phpdev"
